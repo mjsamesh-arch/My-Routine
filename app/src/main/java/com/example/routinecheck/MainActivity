@@ -1,0 +1,48 @@
+package com.example.routinecheck
+
+import android.os.Bundle
+import android.widget.Button
+import android.widget.EditText
+import android.widget.ListView
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+
+class MainActivity : AppCompatActivity() {
+
+    private lateinit var routines: MutableList<Routine>
+    private lateinit var adapter: RoutineAdapter
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        val editName = findViewById<EditText>(R.id.editRoutineName)
+        val btnAdd = findViewById<Button>(R.id.btnAdd)
+        val listView = findViewById<ListView>(R.id.listRoutines)
+
+        routines = RoutineStore.loadRoutines(this)
+
+        adapter = RoutineAdapter(this, routines) {
+            RoutineStore.saveRoutines(this, routines)
+        }
+        listView.adapter = adapter
+
+        btnAdd.setOnClickListener {
+            val name = editName.text.toString().trim()
+            if (name.isEmpty()) {
+                Toast.makeText(this, "루틴 이름을 입력하세요", Toast.LENGTH_SHORT).show()
+            } else {
+                val newRoutine = Routine(id = System.currentTimeMillis(), name = name)
+                routines.add(newRoutine)
+                adapter.notifyDataSetChanged()
+                RoutineStore.saveRoutines(this, routines)
+                editName.text.clear()
+            }
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        RoutineStore.saveRoutines(this, routines)
+    }
+}
